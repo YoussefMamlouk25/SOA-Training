@@ -1,8 +1,10 @@
 package webservices;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import rest.utilities.RestActivator;
 
-@ApplicationPath("api")
-public class ApplicationMain extends Application {
+/**
+ * Kept for backwards compatibility with any existing IDE run configurations.
+ * JAX-RS activation is handled by rest.utilities.RestActivator.
+ */
+public class ApplicationMain extends RestActivator {
 }
