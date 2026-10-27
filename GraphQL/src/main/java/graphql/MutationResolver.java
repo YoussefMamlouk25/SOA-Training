@@ -1,57 +1,97 @@
 package graphql;
 
-// Import the business logic class responsible for managing "UniteEnseignement" data
+import business.ModuleBusiness;
 import business.UniteEnseignementBusiness;
-
-// Import the GraphQL library class used to define the root of GraphQL mutations
 import com.coxautodev.graphql.tools.GraphQLRootResolver;
-
-// Import the entity class representing a Teaching Unit (Unité d’Enseignement)
+import entities.Module;
 import entities.UniteEnseignement;
 
 /**
- * This class defines all GraphQL mutations related to the "UniteEnseignement" entity.
- * A mutation in GraphQL is used to perform write operations (create, update, delete)
- * as opposed to queries, which are for read operations.
+ * Root resolver for GraphQL mutations.
+ * Handles create, update, and delete operations for UniteEnseignement and Module entities.
  */
 public class MutationResolver implements GraphQLRootResolver {
 
-    // Attribute used to access the business logic (service layer)
     public UniteEnseignementBusiness helper;
+    public UniteEnseignementBusiness ueBusiness;
+    public ModuleBusiness moduleBusiness;
+
+    public MutationResolver() {
+        this.ueBusiness = new UniteEnseignementBusiness();
+        this.moduleBusiness = new ModuleBusiness();
+        this.helper = this.ueBusiness;
+    }
+
+    public MutationResolver(UniteEnseignementBusiness ueBusiness, ModuleBusiness moduleBusiness) {
+        this.ueBusiness = ueBusiness;
+        this.moduleBusiness = moduleBusiness;
+        this.helper = ueBusiness;
+    }
+
+    // ==========================================
+    // Unités d'Enseignement Mutations
+    // ==========================================
 
     /**
-     * Constructor of the resolver.
-     * It initializes the business helper that manages the teaching units.
+     * 1. Create a new Teaching Unit (Unité d'Enseignement)
      */
-    public MutationResolver() {
-        helper = new UniteEnseignementBusiness();
+    public boolean addUniteEnseignement(int code, String domaine, String responsable, int credits, int semestre) {
+        UniteEnseignement ue = new UniteEnseignement(code, domaine, responsable, credits, semestre);
+        return ueBusiness.addUniteEnseignement(ue);
     }
 
     /**
-     * GraphQL Mutation: addUniteEnseignement
-     *
-     * This method allows clients to add a new "Unité d’Enseignement" to the system.
-     *
-     * When a GraphQL mutation like the following is executed:
-     *
-     * mutation {
-     *     addUniteEnseignement(
-     *         code: 101,
-     *         domaine: "Informatique",
-     *         responsable: "Dr. Smith",
-     *         credits: 4,
-     *         semestre: 2
-     *     )
-     * }
-     *
-     * GraphQL calls this Java method to create and save a new teaching unit.
+     * 5. Update an existing Teaching Unit by its code
      */
-    public boolean addUniteEnseignement(int code, String domaine, String responsable, int credits, int semestre) {
-        // Create a new UniteEnseignement object with the provided parameters
-        UniteEnseignement ue = new UniteEnseignement(code, domaine, responsable, credits, semestre);
+    public boolean updateUniteEnseignement(int code, String domaine, String responsable, int credits, int semestre) {
+        UniteEnseignement updatedUE = new UniteEnseignement(code, domaine, responsable, credits, semestre);
+        return ueBusiness.updateUniteEnseignement(code, updatedUE);
+    }
 
-        // Call the business logic method to add the new unit
-        // The helper handles the actual persistence or logic of adding the entity
-        return helper.addUniteEnseignement(ue);
+    /**
+     * 6. Delete a Teaching Unit by its code
+     */
+    public boolean deleteUniteEnseignement(int code) {
+        return ueBusiness.deleteUniteEnseignement(code);
+    }
+
+    // ==========================================
+    // Modules Mutations
+    // ==========================================
+
+    /**
+     * 2. Create a new Module with Boolean return type
+     */
+    public boolean addModule(String matricule, String libelle, int coef, int volumeHoraire, int codeUE, Module.TypeModule type) {
+        UniteEnseignement ue = ueBusiness.getUEByCode(codeUE);
+        if (ue == null) {
+            return false;
+        }
+        Module module = new Module(matricule, libelle, coef, volumeHoraire, type, ue);
+        return moduleBusiness.addModule(module);
+    }
+
+    /**
+     * 3. Update an existing Module by its matricule, returning the updated Module
+     */
+    public Module updateModule(String matricule, String libelle, int coef, int volumeHoraire, Module.TypeModule type, int codeUE) {
+        UniteEnseignement ue = ueBusiness.getUEByCode(codeUE);
+        Module updatedModule = new Module(matricule, libelle, coef, volumeHoraire, type, ue);
+        boolean success = moduleBusiness.updateModule(matricule, updatedModule);
+        if (success) {
+            return updatedModule;
+        }
+        return null;
+    }
+
+    /**
+     * 6. Delete a Module by its matricule, returning confirmation message
+     */
+    public String deleteModule(String matricule) {
+        boolean success = moduleBusiness.deleteModule(matricule);
+        if (success) {
+            return "deleted successfully";
+        }
+        return "Module not found";
     }
 }

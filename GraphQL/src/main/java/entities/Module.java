@@ -48,12 +48,28 @@ public class Module {
         this.nom = nom;
     }
 
+    public String getLibelle() {
+        return nom;
+    }
+
+    public void setLibelle(String libelle) {
+        this.nom = libelle;
+    }
+
     public int getCoefficient() {
         return coefficient;
     }
 
     public void setCoefficient(int coefficient) {
         this.coefficient = coefficient;
+    }
+
+    public int getCoef() {
+        return coefficient;
+    }
+
+    public void setCoef(int coef) {
+        this.coefficient = coef;
     }
 
     public int getVolumeHoraire() {

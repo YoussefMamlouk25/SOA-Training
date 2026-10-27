@@ -112,34 +112,258 @@ You are required to:
 
 ---
 
-## 🧪 Example GraphQL Operations
+---
 
-### Query Example
+## 🧪 Comprehensive GraphQL Operations & Postman Collection
+
+Endpoint URL: `http://localhost:8083/WorkshopGraphQL_war_exploded/graphql` (or your configured port/context path).
+
+### 🧩 A. Modules Operations
+
+#### 1. Récupération de la liste de tous les modules
 ```graphql
 query {
   allModules {
-    code
-    name
+    matricule
+    nom
+    volumeHoraire
+    type
+    uniteEnseignement {
+      code
+      domaine
+      responsable
+    }
+  }
+}
+```
+
+#### 2. Création d'un nouveau module avec un type de retour Boolean
+```graphql
+mutation {
+  addModule(
+    matricule: "UE123"
+    libelle: "SOA"
+    coef: 2
+    volumeHoraire: 21
+    codeUE: 1
+    type: TRANSVERSAL
+  )
+}
+```
+**Response:**
+```json
+{
+  "data": {
+    "addModule": true
+  }
+}
+```
+
+#### 3. Modification d'un module ayant un identifiant spécifique
+```graphql
+mutation {
+  updateModule(
+    matricule: "M101"
+    libelle: "Algorithmique"
+    coef: 3
+    volumeHoraire: 21
+    type: PROFESSIONNEL
+    codeUE: 1
+  ) {
+    matricule
+    nom
+    volumeHoraire
+    type
+  }
+}
+```
+**Response:**
+```json
+{
+  "data": {
+    "updateModule": {
+      "matricule": "M101",
+      "nom": "Algorithmique",
+      "volumeHoraire": 21,
+      "type": "PROFESSIONNEL"
+    }
+  }
+}
+```
+
+#### 4. Récupération de la liste des modules ayant un type spécifique
+```graphql
+query {
+  getModulesByType(type: PROFESSIONNEL) {
+    matricule
+    nom
+    volumeHoraire
     type
   }
 }
 ```
 
-### Mutation Example
+#### 5. Récupération d'un module ayant une matricule spécifique
+```graphql
+query {
+  getModuleByMatricule(matricule: "M101") {
+    matricule
+    nom
+    volumeHoraire
+    type
+    uniteEnseignement {
+      code
+      domaine
+    }
+  }
+}
+```
+
+#### 6. Suppression d'un module ayant une matricule spécifique
 ```graphql
 mutation {
-  createModule(code: "M001", name: "Web Services", type: PROFESSIONAL)
+  deleteModule(matricule: "M102")
+}
+```
+**Response:**
+```json
+{
+  "data": {
+    "deleteModule": "deleted successfully"
+  }
 }
 ```
 
 ---
 
-## 💡 To Explore Further
+### 🧱 B. Unités d'Enseignement (UE) Operations
 
-- REST vs GraphQL: structural and network differences.  
-- Strong typing and introspection in GraphQL.  
-- Resolver pattern and dependency injection.  
-- Combining multiple queries in a single GraphQL request.
+#### 1. Création d'une nouvelle unité d'enseignement
+```graphql
+mutation {
+  addUniteEnseignement(
+    code: 10
+    domaine: "Intelligence Artificielle"
+    responsable: "Dr. Ali"
+    credits: 5
+    semestre: 2
+  )
+}
+```
+**Response:**
+```json
+{
+  "data": {
+    "addUniteEnseignement": true
+  }
+}
+```
+
+#### 2. Récupération d'une Unité d'Enseignement à partir de son code unique
+```graphql
+query {
+  getUEByCode(code: 1) {
+    code
+    domaine
+    responsable
+    credits
+    semestre
+  }
+}
+```
+
+#### 3. Récupération de toutes les Unités d'Enseignement appartenant à un domaine donné
+```graphql
+query {
+  getUEByDomaine(domaine: "Informatique") {
+    code
+    domaine
+    responsable
+    credits
+  }
+}
+```
+
+#### 4. Récupération de toutes les Unités d'Enseignement d'un semestre donné
+```graphql
+query {
+  getUEBySemestre(semestre: 1) {
+    code
+    domaine
+    responsable
+    credits
+    semestre
+  }
+}
+```
+
+#### 5. Mettre à jour une Unité d'Enseignement existante (identifiée par son code)
+```graphql
+mutation {
+  updateUniteEnseignement(
+    code: 1
+    domaine: "Informatique Avancée"
+    responsable: "Mme Maroua Douiri"
+    credits: 6
+    semestre: 1
+  )
+}
+```
+
+#### 6. Supprimer une Unité d'Enseignement en fonction de son code
+```graphql
+mutation {
+  deleteUniteEnseignement(code: 5)
+}
+```
+
+---
+
+### ❓ Question 3 : Tester plusieurs opérations query dans une seule requête GraphQL, que remarquez-vous ?
+
+#### Requête test multi-query :
+```graphql
+query GetAcademicOverview {
+  # 1. Récupération de tous les modules
+  allModules {
+    matricule
+    nom
+    type
+  }
+  
+  # 2. Récupération de toutes les UE
+  allUEs {
+    code
+    domaine
+    responsable
+  }
+  
+  # 3. Récupération d'une UE spécifique avec un alias
+  ueInformatique: getUEByCode(code: 1) {
+    code
+    domaine
+    credits
+  }
+  
+  # 4. Récupération des modules professionnels
+  modulesPro: getModulesByType(type: PROFESSIONNEL) {
+    matricule
+    nom
+  }
+}
+```
+
+#### Ce que l'on remarque (Observations & Analyse) :
+1. **Une seule requête HTTP (Single Round-Trip)** :
+   Contrairement à une architecture REST où il faudrait effectuer **4 requêtes HTTP distinctes** (`GET /modules`, `GET /ues`, `GET /ues/1`, `GET /modules?type=PROFESSIONNEL`), GraphQL permet de regrouper toutes ces demandes en **un seul appel HTTP**. Cela réduit drastiquement la latence réseau et la charge sur le serveur.
+2. **Réponse consolidée et structurée** :
+   Le serveur renvoie une seule charge utile JSON sous l'objet `"data"` où chaque clé correspond exactement aux opérations demandées.
+3. **Absence de sur-récupération (Over-fetching) et de sous-récupération (Under-fetching)** :
+   Pour chaque sous-requête, le client spécifie exactement les champs dont il a besoin (ex: seulement `matricule` et `nom`), évitant tout transfert de données inutiles.
+4. **Utilisation des alias** :
+   Lorsqu'on appelle deux fois la même opération ou pour clarifier la réponse (ex: `ueInformatique: getUEByCode(code: 1)`), GraphQL permet de renommer les clés de sortie pour éviter toute collision.
+5. **Indépendance des résolveurs** :
+   Chaque champ de premier niveau est résolu de façon indépendante par le moteur GraphQL, permettant une modularité et une extensibilité maximales.
 
 ---
 

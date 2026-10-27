@@ -1,5 +1,7 @@
-import com.coxautodev.graphql.tools.GraphQLResolver;
+import business.ModuleBusiness;
+import business.UniteEnseignementBusiness;
 import com.coxautodev.graphql.tools.SchemaParser;
+import entities.Module;
 import graphql.MutationResolver;
 import graphql.QueryResolver;
 import graphql.schema.GraphQLSchema;
@@ -15,12 +17,17 @@ public class GraphQLEndPoint extends SimpleGraphQLServlet {
     }
 
     private static GraphQLSchema buildSchema() {
+        UniteEnseignementBusiness ueBusiness = new UniteEnseignementBusiness();
+        ModuleBusiness moduleBusiness = new ModuleBusiness();
+
         return SchemaParser.newParser()
-               .file("schema.graphql")
-               .resolvers(new QueryResolver(), new MutationResolver())
-               .build()
-               .makeExecutableSchema();
-
+                .file("schema.graphql")
+                .dictionary("TypeModule", Module.TypeModule.class)
+                .resolvers(
+                        new QueryResolver(ueBusiness, moduleBusiness),
+                        new MutationResolver(ueBusiness, moduleBusiness)
+                )
+                .build()
+                .makeExecutableSchema();
     }
-
 }
